@@ -69,11 +69,13 @@ function single_run_GUI(varargin)
 %           i-Inseart new view cluster
 %           d-Deleted selected view cluster
 
+% TODO: Use calculated embeddings for visualizing graph. This would probably make the scatterplot irrelevant.
+% TODO: Update visualizations while embeddings are being calculated and allow the user to pause or interrupt.
+% TODO: Show the reconstructed adjacency matrix.
 % TODO: Should be able to read precalculated data from file.
-% TODO: Order clusters in Clustered Adjacency Matrix as in Original Adjacency matrix
-% FIXME: NMI fails after data are modified by removing a cluster
-% FIXME: predicted view labels in legends do not match the exact ID of the
-% corresponding ground-truth view label.
+% TODO: Order clusters in Clustered Adjacency Matrix as in Original Adjacency matrix.
+% FIXME: NMI fails after data are modified by removing a cluster.
+% FIXME: predicted view labels in legends do not match the exact ID of the corresponding ground-truth view label.
     % -----------------------------------------
     % ------------ Initializations ------------
     % -----------------------------------------
