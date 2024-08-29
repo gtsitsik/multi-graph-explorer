@@ -69,7 +69,7 @@ function single_run_GUI(varargin)
 %           i-Inseart new view cluster
 %           d-Deleted selected view cluster
 
-% TODO: Use calculated embeddings for visualizing graph. This would probably make the scatterplot irrelevant.
+% TODO: Remove scatterplot.
 % TODO: Update visualizations while embeddings are being calculated and allow the user to pause or interrupt.
 % TODO: Show the reconstructed adjacency matrix.
 % TODO: Should be able to read precalculated data from file.
@@ -252,8 +252,8 @@ function single_run_GUI(varargin)
                     ).^2;
                 [~,tmp] = max(perm_proj{i},[],2);
 
-                % TODO: let the user activate/deactivate the line below
-                perm_proj{i} = tmp==[1:size(perm_proj{i},2)];
+                % TODO: let the user activate/deactivate the line below which controls how the colors of the calculated clusters are matched to the original ones
+                %perm_proj{i} = tmp==[1:size(perm_proj{i},2)];
             else
                 perm_proj{i} = eye(U_cl_num(i));
             end
@@ -659,37 +659,6 @@ function single_run_GUI(varargin)
             ax_.Position = [1/3-1/80 0.5 1/80 max(0.5-tmp,0.5)]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
         end
 
-        ax_ind = 4;
-        % plot only nodes with non-zero degrees
-        tmp = cur_X_slice~=0;
-        tmp_inds = find((sum(tmp,1)>0)+(sum(tmp,2)>0)');
-        %                     tmp_inds = 1:size(X,1);
-        % normally should be put outside the "if recalulate", but is
-        % put in here for efficiency. Plotting graphs is slow.
-        if (gui_data.recalculate  && gui_data.plot_orig_graph_is_on) || gui_data.force_plot_is_on 
-            tic
-
-            ax = get_axis(4);
-            %             ax = nexttile(gui_data.tl,2);
-            gui_data.G_labeled = digraph(cur_X_slice(tmp_inds,tmp_inds),'omitselfloops');
-            g_l = plot(ax,gui_data.G_labeled,'EdgeColor','k');
-            title(ax,"Original Graph")
-            i = 1;
-            for j = unique(nodes_labels{gui_data.k_orig_ind})
-                highlight(g_l,find(nodes_labels{gui_data.k_orig_ind}(tmp_inds)==j),'NodeColor',gui_data.default_colors(i,:))
-                i = i+1;
-            end
-            gui_data.plot_orig_graph_is_on = false;
-            gui_data.times_all(ax_ind)=toc;
-%             disp("plot "+ax_ind+": "+gui_data.times_all(ax_ind))
-            ax.OuterPosition = [0 0 1/3 0.5];
-            ax.Position = [0 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
-            if exist("nodes_labels_names",'var') && iscell(nodes_labels_names) && gui_data.k_orig_ind<=numel(nodes_labels_names)
-                tmp = gui_data.k_orig_ind;
-                labels_names = nodes_labels_names{tmp}+"."+string(tmp);
-                add_legend(ax,labels_names,0);
-            end
-        end
 
 
 
@@ -753,6 +722,41 @@ function single_run_GUI(varargin)
                     labels_names = nodes_labels_names{tmp}+"."+string(tmp);
                     add_legend(ax,labels_names,0,"NorthEast");
                 end
+            end
+        end
+
+        ax_ind = 4;
+        % plot only nodes with non-zero degrees
+        tmp = cur_X_slice~=0;
+        tmp_inds = find((sum(tmp,1)>0)+(sum(tmp,2)>0)');
+        %                     tmp_inds = 1:size(X,1);
+        % normally should be put outside the "if recalulate", but is
+        % put in here for efficiency. Plotting graphs is slow.
+        if gui_data.recalculate || gui_data.force_plot_is_on 
+            tic
+
+            ax = get_axis(4);
+            %             ax = nexttile(gui_data.tl,2);
+            gui_data.G_labeled = digraph(cur_X_slice(tmp_inds,tmp_inds),'omitselfloops');
+            g_l = plot(ax,gui_data.G_labeled,'EdgeColor','k','XData',P_MDS_aug(:,1),'YData',P_MDS_aug(:,2));
+            ax.XTick=[];
+            ax.YTick=[];
+            axis(ax,'image')
+            title(ax,"Original Graph")
+            i = 1;
+            for j = unique(nodes_labels{gui_data.k_orig_ind})
+                highlight(g_l,find(nodes_labels{gui_data.k_orig_ind}(tmp_inds)==j),'NodeColor',gui_data.default_colors(i,:))
+                i = i+1;
+            end
+            gui_data.plot_orig_graph_is_on = false;
+            gui_data.times_all(ax_ind)=toc;
+%             disp("plot "+ax_ind+": "+gui_data.times_all(ax_ind))
+            ax.OuterPosition = [0 0 1/3 0.5];
+            ax.Position = [0 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            if exist("nodes_labels_names",'var') && iscell(nodes_labels_names) && gui_data.k_orig_ind<=numel(nodes_labels_names)
+                tmp = gui_data.k_orig_ind;
+                labels_names = nodes_labels_names{tmp}+"."+string(tmp);
+                add_legend(ax,labels_names,0);
             end
         end
 
@@ -857,7 +861,10 @@ function single_run_GUI(varargin)
         if (gui_data.recalculate || gui_data.force_plot_is_on) && ~isnan(k_calc)
             tic
             gui_data.G = digraph(cur_X_slice(tmp_inds,tmp_inds),'omitselfloops');
-            g1 = plot(ax,gui_data.G,'EdgeColor','k','NodeColor','k');
+            g1 = plot(ax,gui_data.G,'EdgeColor','k','NodeColor','k','XData',P_MDS_aug(:,1),'YData',P_MDS_aug(:,2));
+            ax.XTick=[];
+            ax.YTick=[];
+            axis(ax,'image')
             title(ax,"Clustered Graph")
             i = 1;
             for j = unique(pred.nodes.labels{k_calc_ind})'
