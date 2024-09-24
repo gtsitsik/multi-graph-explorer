@@ -69,13 +69,13 @@ function single_run_GUI(varargin)
 %           i-Inseart new view cluster
 %           d-Deleted selected view cluster
 
-% TODO: Remove scatterplot.
 % TODO: Update visualizations while embeddings are being calculated and allow the user to pause or interrupt.
 % TODO: Show the reconstructed adjacency matrix.
 % TODO: Should be able to read precalculated data from file.
 % TODO: Order clusters in Clustered Adjacency Matrix as in Original Adjacency matrix.
 % FIXME: NMI fails after data are modified by removing a cluster.
 % FIXME: predicted view labels in legends do not match the exact ID of the corresponding ground-truth view label.
+% FIXME: Axis dimensions of Graph Original and Graph Clustered are calcuted correctly only after an update is forced (e.g. navigating to a differnt view)
     % -----------------------------------------
     % ------------ Initializations ------------
     % -----------------------------------------
@@ -454,7 +454,7 @@ function single_run_GUI(varargin)
             gui_data.navigate_only_current_view_structure = true;
             gui_data.cur_view_labels = pred.views.labels;
             gui_data.slices_to_navigate = find(gui_data.cur_view_labels(gui_data.slice_id)==gui_data.cur_view_labels);
-            gui_data.legend_visibility = "off";
+            gui_data.legend_visibility = "on";
             gui_data.navigate_based_on_orig_structure = false;
 
             info_bar_height = 0.1;
@@ -637,8 +637,8 @@ function single_run_GUI(varargin)
 %             disp("plot "+ax_ind+": "+gui_data.times_all(ax_ind))
             ax_ = get_axis(7);
             ax = get_axis(1);            
-            ax.OuterPosition = [0.0 0.5 1/3-1/80 0.5];
-            ax.Position = [0.0 0.5 1/3-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            ax.OuterPosition = [0.0 0.5 1/2-1/80 0.5];
+            ax.Position = [0.0 0.5 1/2-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
             if exist("views_labels_names",'var') 
                 add_legend(ax_,views_labels_names,0);
             end
@@ -647,23 +647,29 @@ function single_run_GUI(varargin)
                 labels_names = nodes_labels_names{tmp}+"."+string(tmp);
                 add_legend(ax,labels_names,0,"NorthEast");
             end
-            ax_.OuterPosition = [1/3-1/80 0.5 1/80 0.5];
-            ax_.Position = [1/3-1/80 0.5 1/80 0.5]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+%             ax_.OuterPosition = [1/2-1/80 0.5 1/80 0.5];
+%             ax_.Position = [1/2-1/80 0.5 1/80 0.5]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
             tmp=0;
             if gui_data.legend_visibility=="on"
-%                 ax_.Legend.Position(2)=1-ax_.Legend.Position(4);
-%                 ax_.Legend.Position(1)=ax_.Position(1)-(ax_.Legend.Position(3)-2*ax_.Position(3))/2;
+                ax_.Legend.Position(2)=1-ax_.Legend.Position(4);
+                ax_.Legend.Position(1)=ax_.Position(1)-(ax_.Legend.Position(3)-2*ax_.Position(3))/2;
                 tmp = ax_.Legend.Position(4);
             end
-            ax_.OuterPosition = [1/3-1/80 0.5 1/80 max(0.5-tmp,0.5)];
-            ax_.Position = [1/3-1/80 0.5 1/80 max(0.5-tmp,0.5)]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            ax_.OuterPosition = [1/2-1/80 0.5 1/80 0.5-tmp];
+            ax_.Position = [1/2-1/80 0.5 1/80 0.5-tmp]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            text(ax_,0,0.5,'Original Views','Rotation',90,'FontSize',12,'FontWeight','Bold','Units','normalized','HorizontalAlignment','center','VerticalAlignment','bottom')
+%             ax_.YAxisLocation='right';
+%             ylabel(ax_,'Orignal Views')
         end
 
 
-
+        U_nrm_tmp = U_nrm{k_calc};
+        U_nrm_tmp(isnan(U_nrm_tmp))=0;
+        P_MDS = cmdscale(squareform(pdist(U_nrm_tmp)),2);
+        P_MDS_aug = cat(2,P_MDS,zeros(size(P_MDS,1),2-size(P_MDS,2)));
 
         ax_ind = 3;
-        if (gui_data.recalculate || gui_data.force_plot_is_on) && ~isnan(k_calc)
+        if (gui_data.recalculate || gui_data.plot_clustered_mat_is_on  || gui_data.force_plot_is_on) && ~isnan(k_calc) && false
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             ax = get_axis(3);
             %~~~~~~~~~~~~~~~~~~ plots first 3 dimensions of normalized latent representations ~~~~~~~~~~~~~~~~~
@@ -696,10 +702,7 @@ function single_run_GUI(varargin)
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             %~~~~~~~~~~~~~~~ plots scatterplot of 2D MDS of normalized latent representations ~~~~~~~~~~~~~~~
             %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            U_nrm_tmp = U_nrm{k_calc};
-            U_nrm_tmp(isnan(U_nrm_tmp))=0;
-            P_MDS = cmdscale(squareform(pdist(U_nrm_tmp)),2);
-            P_MDS_aug = cat(2,P_MDS,zeros(size(P_MDS,1),2-size(P_MDS,2)));
+
             node_IDs = 1:size(P_MDS,1);
             if k_calc <= numel(nodes_labels)
                 tmp = nodes_labels{k_calc};
@@ -732,17 +735,17 @@ function single_run_GUI(varargin)
         %                     tmp_inds = 1:size(X,1);
         % normally should be put outside the "if recalulate", but is
         % put in here for efficiency. Plotting graphs is slow.
-        if gui_data.recalculate || gui_data.force_plot_is_on 
+        if gui_data.recalculate || gui_data.plot_clustered_mat_is_on || gui_data.force_plot_is_on 
             tic
 
             ax = get_axis(4);
             %             ax = nexttile(gui_data.tl,2);
             gui_data.G_labeled = digraph(cur_X_slice(tmp_inds,tmp_inds),'omitselfloops');
-            g_l = plot(ax,gui_data.G_labeled,'EdgeColor','k','XData',P_MDS_aug(:,1),'YData',P_MDS_aug(:,2));
+            g_l = plot(ax,gui_data.G_labeled,'EdgeColor','k','XData',P_MDS_aug(tmp_inds,1),'YData',P_MDS_aug(tmp_inds,2));
             ax.XTick=[];
             ax.YTick=[];
-            axis(ax,'image')
             title(ax,"Original Graph")
+%             axis(ax,'equal')
             i = 1;
             for j = unique(nodes_labels{gui_data.k_orig_ind})
                 highlight(g_l,find(nodes_labels{gui_data.k_orig_ind}(tmp_inds)==j),'NodeColor',gui_data.default_colors(i,:))
@@ -751,12 +754,14 @@ function single_run_GUI(varargin)
             gui_data.plot_orig_graph_is_on = false;
             gui_data.times_all(ax_ind)=toc;
 %             disp("plot "+ax_ind+": "+gui_data.times_all(ax_ind))
-            ax.OuterPosition = [0 0 1/3 0.5];
-            ax.Position = [0 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            ax.OuterPosition = [0 0 1/2 0.5];
+            ax.Position = [0 0 1/2 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            daspect(ax,[1 1 1])
+            ax.PlotBoxAspectRatioMode='manual';
             if exist("nodes_labels_names",'var') && iscell(nodes_labels_names) && gui_data.k_orig_ind<=numel(nodes_labels_names)
                 tmp = gui_data.k_orig_ind;
                 labels_names = nodes_labels_names{tmp}+"."+string(tmp);
-                add_legend(ax,labels_names,0);
+                add_legend(ax,labels_names,0,'Northeast');
             end
         end
 
@@ -775,7 +780,7 @@ function single_run_GUI(varargin)
             X_mask2 = zeros(size(cur_X_slice,1),size(cur_X_slice,2),3);
 
 
-                X_mask3 = ones(max([1 round(size(cur_X_slice,2)/50)]),size(cur_X_slice,2),3);
+            X_mask3 = ones(max([1 round(size(cur_X_slice,2)/50)]),size(cur_X_slice,2),3);
             if k_calc<=numel(nodes_labels)
                 i = 1;
                 for j = unique(nodes_labels{k_calc})
@@ -832,8 +837,8 @@ function single_run_GUI(varargin)
                     add_legend(ax,labels_names,0,"NorthEast");
                 end
             end
-            ax.OuterPosition = [1/3+1/80 0.5 1/3-1/80 0.5];
-            ax.Position = [1/3+1/80 0.5 1/3-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            ax.OuterPosition = [1/2+1/80 0.5 1/2-1/80 0.5];
+            ax.Position = [1/2+1/80 0.5 1/2-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
             gui_data.times_all(ax_ind)=toc;
             view_labels_image = ones(size(X,3),5,3);
 
@@ -847,24 +852,27 @@ function single_run_GUI(varargin)
             end
             view_labels_image(gui_data.slice_id,3,:)= [0 0 0];
             imagesc(ax_,view_labels_image);
+            text(ax_,1,0.5,'Clustered Views','Rotation',270,'FontSize',12,'FontWeight','Bold','Units','normalized','HorizontalAlignment','center','VerticalAlignment','bottom')
             ax_.XTick = [];
             ax_.YTick = [];
 %             disp("plot "+ax_ind+": "+gui_data.times_all(ax_ind))
-            gui_data.plot_clustered_mat_is_on = false;
-        end
-            ax_7 = get_axis(7);
-        ax_.OuterPosition = [1/3 0.5 1/80 ax_7.Position(4)];
-        ax_.Position = [1/3 0.5 1/80  ax_7.Position(4)]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+            
+   
 
-        ax_ind = 5;
-        ax = get_axis(5);
-        if (gui_data.recalculate || gui_data.force_plot_is_on) && ~isnan(k_calc)
+
+            ax_7 = get_axis(7);
+            ax_.OuterPosition = [1/2 0.5 1/80 ax_7.Position(4)];
+            ax_.Position = [1/2 0.5 1/80  ax_7.Position(4)]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+
+            ax_ind = 5;
+            ax = get_axis(5);
+    
             tic
             gui_data.G = digraph(cur_X_slice(tmp_inds,tmp_inds),'omitselfloops');
-            g1 = plot(ax,gui_data.G,'EdgeColor','k','NodeColor','k','XData',P_MDS_aug(:,1),'YData',P_MDS_aug(:,2));
+            g1 = plot(ax,gui_data.G,'EdgeColor','k','NodeColor','k','XData',P_MDS_aug(tmp_inds,1),'YData',P_MDS_aug(tmp_inds,2));
             ax.XTick=[];
             ax.YTick=[];
-            axis(ax,'image')
+%             axis(ax,'image')
             title(ax,"Clustered Graph")
             i = 1;
             for j = unique(pred.nodes.labels{k_calc_ind})'
@@ -873,15 +881,18 @@ function single_run_GUI(varargin)
             end
             gui_data.times_all(ax_ind)=toc;
 %             disp("plot "+ax_ind+": "+gui_data.times_all(ax_ind))
-            ax.OuterPosition = [1/3 0 1/3 0.5];
-            ax.Position = [1/3 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1]; 
+            ax.OuterPosition = [1/2 0 1/2 0.5];
+            ax.Position = [1/2 0 1/2 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1]; 
+            daspect(ax,[1 1 1])
+            ax.PlotBoxAspectRatioMode='manual';
             if exist("nodes_labels_names",'var') && iscell(nodes_labels_names) && gui_data.k_orig_ind<=numel(nodes_labels_names) 
                 tmp = k_calc_ind;
                 if tmp<= numel(nodes_labels_names)
                     labels_names = nodes_labels_names{tmp}+"."+string(tmp);
-                    add_legend(ax,labels_names,0);
+                    add_legend(ax,labels_names,0,'Northeast');
                 end
             end
+            gui_data.plot_clustered_mat_is_on = false;
         end
         ax_ind = 6;
         if ( gui_data.recalculate || gui_data.force_plot_is_on ) && false
@@ -1087,8 +1098,8 @@ function single_run_GUI(varargin)
         drawnow
         ax_ = get_axis(7);
         ax = get_axis(1);            
-        ax.OuterPosition = [0.0 0.5 1/3-1/80 0.5];
-        ax.Position = [0.0 0.5 1/3-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+        ax.OuterPosition = [0.0 0.5 1/2-1/80 0.5];
+        ax.Position = [0.0 0.5 1/2-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
 
         tmp=0;
         if gui_data.legend_visibility=="on"
@@ -1096,28 +1107,28 @@ function single_run_GUI(varargin)
             ax_.Legend.Position(1)=ax_.Position(1)-(ax_.Legend.Position(3)-2*ax_.Position(3))/2;
             tmp = ax_.Legend.Position(4);
         end
-        ax_.OuterPosition = [1/3-1/80 0.5 1/80 0.5-tmp*0];
-        ax_.Position = [1/3-1/80 0.5 1/80 0.5-tmp*0]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+        ax_.OuterPosition = [1/2-1/80 0.5 1/80 0.5-tmp];
+        ax_.Position = [1/2-1/80 0.5 1/80 0.5-tmp]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
 
         ax = get_axis(4);
-        ax.OuterPosition = [0 0 1/3 0.5];
-        ax.Position = [0 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
-        ax = get_axis(3);
-        ax.OuterPosition = [2/3 0.5 1/3 0.5];
-        ax.Position = [2/3 0.5 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+        ax.OuterPosition = [0 0 1/2 0.5];
+        ax.Position = [0 0 1/2 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+%         ax = get_axis(3);
+%         ax.OuterPosition = [2/3 0.5 1/2 0.5];
+%         ax.Position = [2/3 0.5 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
         ax_ = get_axis(8);
         ax = get_axis(2);
-        ax.OuterPosition = [1/3+1/80 0.5 1/3-1/80 0.5];
-        ax.Position = [1/3+1/80 0.5 1/3-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+        ax.OuterPosition = [1/2+1/80 0.5 1/2-1/80 0.5];
+        ax.Position = [1/2+1/80 0.5 1/2-1/80 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
         ax_7 = get_axis(7);
-        ax_.OuterPosition = [1/3 0.5 1/80 ax_7.Position(4)];
-        ax_.Position = [1/3 0.5 1/80  ax_7.Position(4)]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+        ax_.OuterPosition = [1/2 0.5 1/80 ax_7.Position(4)];
+        ax_.Position = [1/2 0.5 1/80  ax_7.Position(4)]-ax_.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
         ax = get_axis(5);
-        ax.OuterPosition = [1/3 0 1/3 0.5];
-        ax.Position = [1/3 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
-        ax = get_axis(6);
-        ax.OuterPosition = [2/3 0 1/3 0.5];
-        ax.Position = [2/3 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+        ax.OuterPosition = [1/2 0 1/2 0.5];
+        ax.Position = [1/2 0 1/2 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
+%         ax = get_axis(6);
+%         ax.OuterPosition = [2/3 0 1/3 0.5];
+%         ax.Position = [2/3 0 1/3 0.5]-ax.TightInset*[-1 0 1 0;0 -1 0 1;0 0 1 0;0 0 0 1];
         txt_autoresize([]);
     end
 
