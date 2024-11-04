@@ -26,7 +26,7 @@ This project is associated with the following demo paper:
 |Yorgos Tsitsikas and Evangelos E. Papalexakis. Multi-graph explorer: A framework for advanced multi-graph analysis and method development. In _Proceedings of the 33nd ACM International Conference on Information and Knowledge Management_, October 2024|
 | :--- |
 
-Also, the peer-reviewed version of the manuscript can be found here: https://www.cs.ucr.edu/~epapalex/papers/24-CIKM-Multi-Graph-Explorer.pdf
+Also, the published manuscript can be accessed here: https://dl.acm.org/doi/10.1145/3627673.3679213
 
 BibTeX users can cite this work as follows:
 ```bibtex
