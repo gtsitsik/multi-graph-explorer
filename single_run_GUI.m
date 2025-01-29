@@ -90,11 +90,12 @@ function single_run_GUI(varargin)
     cur_par = [];
     % rng(700)
     L_type_ind = 2;
-    alg = 2;
+    alg = 1;
     thres = 1e-6;
     max_iters = 1000;
     print_type = "basic";
     alg_opts = cell(1,3);
+    alg_opts{1} = {'+','+',0}; % GenClus: A const, B const, rho
     alg_opts{2} = {0.01,0.00,1e-6}; % ComClus: beta, rho, thres_inner
     alg_opts{3} = {0,'random'}; % Symmetric Richcom: rho
     alg_opts{4} = {1,'random'}; % CMNC: delta
@@ -156,6 +157,9 @@ function single_run_GUI(varargin)
         [U_nrm,eigvals]=deal([]);
 
         if ~isfield(gui_data,'force_plot_is_on') || ~gui_data.force_plot_is_on
+            alg_opts_struct{1}.A_const = alg_opts{1}{1};
+            alg_opts_struct{1}.B_const = alg_opts{1}{2};
+            alg_opts_struct{1}.rho = alg_opts{1}{3};
             alg_opts_struct{2}.beta = alg_opts{2}{1};
             alg_opts_struct{2}.rho = alg_opts{2}{2};
             alg_opts_struct{2}.thres_inner = alg_opts{2}{3};
@@ -170,7 +174,9 @@ function single_run_GUI(varargin)
             L_rec = parafac2full(U,U,A*B,mtimesx_exists);
 
             disp("fit: "+fit_time)
-            if alg == 3
+            if alg == 1
+                eigvals = method_specific_vars.eigvals;
+            elseif alg == 3
                 U_cl_num(M+1:end)=[];
             end
         end
@@ -506,7 +512,7 @@ function single_run_GUI(varargin)
 
 
         if gui_data.plot_handles_is_on
-            gui_data.alg_all={"","ComClus","Symmetric RichCom","CMNC"};
+            gui_data.alg_all={"GenClus","ComClus","Symmetric RichCom","CMNC"};
             gui_data.nodes_representation_types={'U','U*sqrt(B)','U*B'};
 
             GUI_txt = [];

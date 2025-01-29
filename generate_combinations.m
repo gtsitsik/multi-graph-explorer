@@ -2,6 +2,9 @@ function [params_all,inds_all] = generate_combinations(params,print_is_on)
 
 % If no input is given the default parameter set is used.
 if ~exist('params','var') || isempty(params)
+    params.embedding_method.GenClus.A_const = ['1','+'];
+    params.embedding_method.GenClus.B_const = ['1','+','U'];
+    % params.embedding_method.GenClus.rho = 0;
     params.embedding_method.ComClus.beta = [0.1,0.2];
     params.embedding_method.ComClus.rho = linspace(0,0.16,6);
     params.embedding_method.ComClus.thres_inner = [1e-6];

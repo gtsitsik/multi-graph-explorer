@@ -180,9 +180,6 @@ if ~gui_data.graph_modification_mode_is_on
                     switch gui_data.cur_alg_opt_id
                         case 1
                             alg = mod(alg,numel(gui_data.alg_all))+1;
-                            if alg==1
-                                alg = mod(alg,numel(gui_data.alg_all))+1;
-                            end
                             gui_data.cur_alg_opt_id_max = numel(alg_opts{alg})+1;
                         otherwise
                             switch alg
@@ -269,7 +266,7 @@ if ~gui_data.graph_modification_mode_is_on
                     switch gui_data.cur_alg_opt_id
                         case 1
                             alg = alg-1;
-                            if alg  == 1
+                            if alg  == 0
                                 alg = numel(gui_data.alg_all);
                             end
                             gui_data.cur_alg_opt_id_max = numel(alg_opts{alg})+1;

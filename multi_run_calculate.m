@@ -59,9 +59,12 @@ if ~isfield(params,'embedding_method')
     warning("'embedding_method'"+params_msg)
     %     params.embedding_method.Symmetric_Richcom.rho = [0:0.4:1];
     %     params.embedding_method.Symmetric_Richcom.structure = "random";
-    params.embedding_method.ComClus.beta = [1];
-    params.embedding_method.ComClus.rho = [0];
-    params.embedding_method.ComClus.thres_inner = [1e-6];
+    params.embedding_method.GenClus.A_const = ['+'];
+    params.embedding_method.GenClus.B_const = ['+'];
+    params.embedding_method.GenClus.rho = 0;
+    %     params.embedding_method.ComClus.beta = [1];
+    %     params.embedding_method.ComClus.rho = [0];
+    %     params.embedding_method.ComClus.thres_inner = [1e-6];
 end
 if ~isfield(params,'thres')
     warning("'thres'"+params_msg)
@@ -325,6 +328,8 @@ if islogical(embeddings_save_is_on)
 
         alg = [];
         switch cur_embedding_method_name
+            case 'GenClus'
+                alg = 1;
             case 'ComClus'
                 alg = 2;
             case 'Symmetric_Richcom'
@@ -349,7 +354,9 @@ if islogical(embeddings_save_is_on)
 %             disp("any(isnan(B(:)))")
 %         end
 
-        if alg == 2
+        if alg == 1
+            eigvals = embedding_method_vars.eigvals;
+        elseif alg == 2
             %         W_all{par_for_ind} = embedding_method_vars.W;
         end
 

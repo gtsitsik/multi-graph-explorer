@@ -5,7 +5,7 @@ if ~exist('labels','var')
 end
 
 if ~exist('alg','var') || isempty(alg) 
-    alg = 2;
+    alg = 1;
 end
 
 if ~exist('L_type_ind','var')|| isempty(L_type_ind) 
@@ -77,6 +77,17 @@ elseif max(L_type_ind == 2)
     end
 end
 switch alg
+    case 1
+        if isempty(alg_opts)
+            alg_opts.A_const = [];
+            alg_opts.B_const = [];
+            alg_opts.rho = [];
+        end
+        [U_,A_,B_,eigvals_,iters,time,obj_cur] = genclus(L,R(R>0),M,thres,max_iters,[alg_opts.A_const,alg_opts.B_const],alg_opts.rho,print_type,mtimesx_exists);
+        U=U_;
+        A=A_;
+        B=B_;
+        method_specific_vars.eigvals=eigvals_;
     case 2
         [U,A,B,W,iters,time,obj_cur] = comclus(L,R,M,thres,max_iters,alg_opts.beta,alg_opts.rho,alg_opts.thres_inner,print_type,mtimesx_exists);
         %             [~,max_St_inds]=max(B',[],2);
