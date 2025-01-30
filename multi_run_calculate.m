@@ -337,7 +337,7 @@ if islogical(embeddings_save_is_on)
             case 'CMNC'
                 alg = 4;
             otherwise
-                error('Incorrect method name')
+                error(''''+cur_embedding_method_name+''''+' is not a valid method name')
         end
 
         embeddings_real_time_start = tic;
