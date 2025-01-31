@@ -1,4 +1,5 @@
-function [U,A,B,eigvals,iters,time,obj_cur] = genclus(X,R,M,thres,max_iters,constraints,rho,print_type,mtimesx_exists)
+function [U,A,B,eigvals,iters,time,obj_cur] = genclus(X,R,M,thres,...
+                       max_iters,constraints,rho,print_type,mtimesx_exists)
 % [U,A,B] = GENCLUS(X,R,M) calculates GenClus
 % on the adjacency tensor X with a total of R components for the node
 % embeddings and M components for the view embeddings. U, A and B are the
@@ -13,7 +14,7 @@ function [U,A,B,eigvals,iters,time,obj_cur] = genclus(X,R,M,thres,max_iters,cons
 %     structure of the nodes only for the i-th view cluster.
 % A - Its i-th row corresponds to the i-th view embedding.
 %
-% [U,A,B] = genclus(X,R,M,thres,max_iters,...
+% [U,A,B] = GENCLUS(X,R,M,thres,max_iters,...
 %                                constraints,rho,print_type,mtimesx_exists)
 % specifies additional input parameters as defined below:
 % thres           -  Convergence threshold.
@@ -31,10 +32,10 @@ function [U,A,B,eigvals,iters,time,obj_cur] = genclus(X,R,M,thres,max_iters,cons
 % mtimesx_exists  -  A flag indicating the availability of the mtimesx
 %                    utility.
 %
-% Note: Any of the inputs can be either ommited or set equal to an empty
+% Note: Any of the inputs can either be ommited or set equal to an empty
 % array [], which will set them to their default value.
 %
-% [U,A,B,eigvals,iters,time,obj_cur] = genclus(X,R,M,...)
+% [U,A,B,eigvals,iters,time,obj_cur] = GENCLUS(X,R,M,...)
 % specifies additional outputs as defined below:
 % eigvals  -  The eigenvalues based on which B is constructed. 
 % iters    -  The actual number of iterations.
